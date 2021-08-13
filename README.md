@@ -3,7 +3,7 @@ Raphael E. Gutierrez • August 7, 2021
 
 Using different supervised classification methods, this notebook aims to predict forest cover type from cartographic variables. The Covertype Dataset is multivariate and contains 581,012 instances of 55 features, a mix of integer and categorical (binary) data. The categorical features (Soil Types and Wilderness Areas) are already converted into binary data to represent as numerical format. The Cover_Type feature highlights an imbalanced distribution of the classes. Due to the large size of the dataset, undersampling is used instead of oversampling to randomly sample the data. Undersampling is a random sampling technique used to randomly remove samples from the majority class. The dataset was retrieved from https://archive.ics.uci.edu/ml/datasets/Covertype.
 
-## Getting Started
+## Preliminaries
 This section imports all the necessary packages for this notebook. Header names are also added to the DataFrame.
 
 **NOTE**: To avoid getting any sklearn error, particularly when training a Logistic Regression model using liblinear solver, a scikit-learn version 0.24.x or higher must be used.
@@ -17,6 +17,8 @@ import pandas as pd
 # Libraries for colormap and plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
+sns.set_style("darkgrid")
+sns.set_palette("Set2")
 
 # Functions for feature scaling, splitting, metrics, and tuning hyperparameters
 from sklearn.preprocessing import StandardScaler
@@ -41,7 +43,7 @@ header_names = ["Elevation", "Aspect", "Slope", "Horizontal_Distance_To_Hydrolog
                 "Horizontal_Distance_To_Roadways", "Hillshade_9am", "Hillshade_Noon", "Hillshade_3pm", 
                 "Horizontal_Distance_To_Fire_Points"] + soil_types + wilderness_areas + ["Cover_Type"]
 
-data = pd.read_csv("../input/covtype/covtype.data", names=header_names, header=None)
+data = pd.read_csv("covtype.data", names=header_names, header=None)
 ```
 
 
@@ -233,8 +235,8 @@ data.shape
 
 
 
-# Data Preprocessing
-All data points in the dataset are checked for Null/NaN values. data.dropna() will be used in case of an instance that the dataset has Null/NaN data points.
+## Exploratory Data Analysis
+All data points in the dataset are checked for Null/NaN values. data.dropna() or data imputation will be used in case of an instance that the dataset has Null/NaN data points and preprocessing will be applied first.
 
 
 ```python
@@ -310,7 +312,7 @@ print(data.info())
 ```python
 print("Features have Null and/or NaN values:", data.isnull().values.any())
 print(data.isnull().sum())
-# data = data.dropna()
+# data = data.dropna() or imputation technique
 ```
 
     Features have Null and/or NaN values: False
@@ -372,8 +374,8 @@ print(data.isnull().sum())
     dtype: int64
     
 
-## Class Distribution & Plotting
-Visualization of two of the features (Elevation and Aspect) and the huge imbalanced distribution of the Cover_Type feature.
+### Class Distribution & Plotting
+Visualization of two of the features (Elevation and Aspect) and the huge imbalanced distribution of the Cover_Type feature. Seeing Elevation vs. Aspect scatter plot, we can see some regions with compact data points of that class while the others are mostly overlapping each other. The histogram shows the class imbalance of the target values.
 
 
 ```python
@@ -398,11 +400,8 @@ data["Cover_Type"].value_counts()
 ```python
 plt.figure(figsize=(10,8))
 
-for i in range(1,7+1):
-    X = data[data["Cover_Type"] == i]["Elevation"][:5000]
-    y = data[data["Cover_Type"] == i]["Aspect"][:5000]
-    plt.scatter(X, y, marker=".", label=i)
-    
+sns.scatterplot(data=data.iloc[0:5000], x="Elevation", y="Aspect", hue="Cover_Type", palette="Set2")
+
 plt.legend(loc="best")
 plt.xlabel("Elevation")
 plt.ylabel("Aspect")
@@ -424,11 +423,10 @@ plt.title("Elevation vs. Aspect")
 
 
 ```python
-cmap = sns.color_palette("Set2", as_cmap=True)
-cmap = cmap(np.arange(7))
-
 plt.figure(figsize=(10,8))
-plt.bar(height=data["Cover_Type"].value_counts().values, x=data["Cover_Type"].value_counts().keys(), color=cmap)
+
+sns.histplot(data=data, x="Cover_Type", hue="Cover_Type", bins=7, palette="Set2")
+
 plt.xlabel("Forest Cover Type")
 plt.ylabel("Count")
 plt.title("Class Distribution of Cover_Type")
@@ -453,6 +451,8 @@ plt.title("Class Distribution of Cover_Type")
 split_scale - Splits the dataset into training and testing sets then scaled using StandardScaler().
 
 evaluate_model - Evaluates the model using mean accuracy (score), confusion matrix in a heatmap, and classification report.
+
+### Preprocessing Function
 
 
 ```python
@@ -485,6 +485,8 @@ def split_scale(data):
 
     return X_train, X_test, y_train, y_test
 ```
+
+### Evaluation & Metrics Function
 
 
 ```python
@@ -580,7 +582,7 @@ evaluate_model(logreg1, X_test, y_test)
 
 
     
-![png](output_20_1.png)
+![png](output_22_1.png)
     
 
 
@@ -629,7 +631,7 @@ evaluate_model(nb1, X_test, y_test)
 
 
     
-![png](output_23_1.png)
+![png](output_25_1.png)
     
 
 
@@ -946,7 +948,7 @@ evaluate_model(logreg2, X_test, y_test)
 
 
     
-![png](output_34_1.png)
+![png](output_36_1.png)
     
 
 
@@ -1045,7 +1047,7 @@ evaluate_model(nb2, X_test, y_test)
 
 
     
-![png](output_40_1.png)
+![png](output_42_1.png)
     
 
 
@@ -1145,7 +1147,7 @@ evaluate_model(dt1, X_test, y_test)
 
 
     
-![png](output_46_1.png)
+![png](output_48_1.png)
     
 
 
@@ -1245,7 +1247,7 @@ evaluate_model(rf1, X_test, y_test)
 
 
     
-![png](output_52_1.png)
+![png](output_54_1.png)
     
 
 
